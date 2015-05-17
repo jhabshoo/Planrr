@@ -17,14 +17,23 @@ import com.parse.ParseObject;
 
 public class AddNewActivity extends Activity {
 
+  /**
+   * enum to hold edittext validation state
+   */
   private enum InputState {
     VALID,
     EMPTY,
     TOO_LONG
   }
+
+  // input state for title field
   private InputState titleState = InputState.VALID;
+  // input state for desc field
   private InputState descState = InputState.VALID;
 
+  /**
+   * input field max length values
+   */
   private int MAX_TITLE_LENGTH = 30;
   private int MAX_DESC_LENGTH = 256;
 
@@ -32,9 +41,9 @@ public class AddNewActivity extends Activity {
   // TODO - fix style
   private final String TITLE_EMPTY_ERROR_MSG = "Title cannot be empty!";
   private final String DESC_EMPTY_ERROR_MSG = "Description cannot be empty.";
-
   private final String TITLE_TOO_LONG_ERROR_MSG = "Title cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
   private final String DESC_TOO_LONG_ERROR_MSG = "Description cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
+
   private int spinnerVisible = View.GONE;
 
   @Override
@@ -134,10 +143,17 @@ public class AddNewActivity extends Activity {
 
   }
 
+  /**
+   *
+   * @return true if title or desc is invalid, false otherwise
+   */
   private boolean isInputErrors() {
     return !titleState.equals(InputState.VALID) || !descState.equals(InputState.VALID);
   }
 
+  /**
+   * calls setError for invalid edittexts
+   */
   void showErrorMessages()  {
     // title
     if (titleState.equals(InputState.EMPTY))  {
@@ -154,6 +170,9 @@ public class AddNewActivity extends Activity {
     }
   }
 
+  /**
+   * builds _TODO to be saved, calls saveTodo(String,String,String)
+   */
   private void saveTodo() {
     EditText titleEditText = (EditText) findViewById(R.id.titleEditText);
     EditText descriptionEditText = (EditText) findViewById(R.id.descriptionEditText);
@@ -164,19 +183,18 @@ public class AddNewActivity extends Activity {
     saveTodo(titleEditText.getText().toString(), descriptionEditText.getText().toString(), depends);
   }
 
+  /**
+   *
+   * @param title title of newTodo
+   * @param description description of newTodo
+   * @param depends _TODO that newTodo depends on, set empty if not a dependent
+   */
   private void saveTodo(String title, String description, String depends) {
     ParseObject newTodo = new ParseObject(Todo.OBJECT_KEY);
     newTodo.put(Todo.TITLE_KEY, title);
     newTodo.put(Todo.DESCRIPTION_KEY, description);
     newTodo.put(Todo.DEPENDS_KEY, depends);
     newTodo.saveInBackground();
-  }
-
-  private void clearForm()  {
-    EditText titleEditText = (EditText) findViewById(R.id.titleEditText);
-    EditText descriptionEditText = (EditText) findViewById(R.id.descriptionEditText);
-    titleEditText.setText("");
-    descriptionEditText.setText("");
   }
 
 }
