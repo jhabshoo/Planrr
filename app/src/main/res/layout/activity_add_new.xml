@@ -32,24 +32,25 @@
         android:layout_height="wrap_content"
         android:text="Save"
         android:id="@+id/saveButton"
+        android:layout_marginBottom="45dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/dependSpinner"
-        android:layout_marginTop="22dp"
-        android:layout_below="@+id/descriptionEditText"
-        android:layout_alignStart="@+id/descriptionEditText"/>
+        android:layout_toEndOf="@+id/dependCheckBox"/>
 
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Dependent?"
         android:id="@+id/dependCheckBox"
+        android:checked="false"
         android:layout_below="@+id/descriptionEditText"
-        android:layout_alignStart="@+id/dependSpinner"
-        android:checked="false"/>
+        android:layout_alignStart="@+id/descriptionEditText"/>
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@android:id/list"
+        android:layout_below="@+id/dependCheckBox"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/saveButton"/>
 
 </RelativeLayout>

@@ -1,21 +1,41 @@
 package com.habna.dev.planrr;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.ListView;
 
+import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
-public class AddNewActivity extends Activity {
+public class AddNewActivity extends ListActivity {
+
+  @Override
+  protected void onListItemClick(ListView l, View v, int position, long id) {
+    super.onListItemClick(l, v, position, id);
+
+    CheckedTextView item = (CheckedTextView) v;
+    item.setChecked(!item.isChecked());
+    if (item.isChecked()) {
+      dependsList.add(item.getText().toString());
+    } else  {
+      dependsList.remove(item.getText().toString());
+    }
+  }
 
   /**
    * enum to hold edittext validation state
@@ -31,6 +51,10 @@ public class AddNewActivity extends Activity {
   // input state for desc field
   private InputState descState = InputState.VALID;
 
+
+  private List<String> dependsList = new ArrayList<>();
+  private List<ListItem> todosList = new ArrayList<>();
+
   /**
    * input field max length values
    */
@@ -44,29 +68,13 @@ public class AddNewActivity extends Activity {
   private final String TITLE_TOO_LONG_ERROR_MSG = "Title cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
   private final String DESC_TOO_LONG_ERROR_MSG = "Description cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
 
-  private int spinnerVisible = View.GONE;
+  private int todosListVisible = View.GONE;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_add_new);
-
-    // depends spinner
-    ParseSpinnerAdapter dependsSpinnerAdapter = new ParseSpinnerAdapter(this, Todo.OBJECT_KEY);
-    dependsSpinnerAdapter.setTextKey(Todo.TITLE_KEY);
-    final Spinner dependSpinner = (Spinner) findViewById(R.id.dependSpinner);
-    dependSpinner.setAdapter(dependsSpinnerAdapter);
-    dependSpinner.setVisibility(spinnerVisible);
-
-    // hide spinner when unchecked
-    final CheckBox dependCheckBox = (CheckBox) findViewById(R.id.dependCheckBox);
-    dependCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-      @Override
-      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        spinnerVisible = spinnerVisible == View.GONE ? View.VISIBLE : View.GONE;
-        dependSpinner.setVisibility(spinnerVisible);
-      }
-    });
+    getActionBar().setDisplayHomeAsUpEnabled(true);
 
 
     // save button
@@ -78,6 +86,36 @@ public class AddNewActivity extends Activity {
       }
     });
 
+    // hide spinner when unchecked
+    final CheckBox dependCheckBox = (CheckBox) findViewById(R.id.dependCheckBox);
+    dependCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        todosListVisible = todosListVisible == View.GONE ? View.VISIBLE : View.GONE;
+        getListView().setVisibility(todosListVisible);
+      }
+    });
+
+    ListView listView = getListView();
+    ParseQuery query = new ParseQuery(Todo.OBJECT_KEY);
+    List results = null;
+    try {
+      results = query.find();
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+    for (Object obj : results)  {
+      ParseObject result = (ParseObject) obj;
+      String title = result.getString(Todo.TITLE_KEY);
+      ListItem listItem = new ListItem(title);
+      todosList.add(listItem);
+    }
+
+    ArrayAdapter adapter = new ArrayAdapter<ListItem>(this,
+        android.R.layout.simple_list_item_multiple_choice, todosList);
+
+    getListView().setVisibility(todosListVisible);
+    getListView().setAdapter(adapter);
   }
 
   @Override
@@ -102,13 +140,11 @@ public class AddNewActivity extends Activity {
     return super.onOptionsItemSelected(item);
   }
 
+  /**
+   * manages adding newTodo flow
+   */
   private void addNewTodo() {
-
-    EditText titleText = (EditText) findViewById(R.id.titleEditText);
-    EditText descText = (EditText) findViewById(R.id.descriptionEditText);
-
     validateTodo();
-
     if (!isInputErrors())  {
       saveTodo();
       Intent intent = new Intent(AddNewActivity.this, MainActivity.class);
@@ -116,7 +152,6 @@ public class AddNewActivity extends Activity {
     } else  {
       showErrorMessages();
     }
-
   }
 
   /**
@@ -176,26 +211,43 @@ public class AddNewActivity extends Activity {
   private void saveTodo() {
     EditText titleEditText = (EditText) findViewById(R.id.titleEditText);
     EditText descriptionEditText = (EditText) findViewById(R.id.descriptionEditText);
-    String depends = "";
-    if (spinnerVisible == View.VISIBLE) {
-      depends = ((ParseObject)((Spinner) findViewById(R.id.dependSpinner)).getSelectedItem()).getString(Todo.TITLE_KEY);
-    }
-    saveTodo(titleEditText.getText().toString(), descriptionEditText.getText().toString(), depends);
+    saveTodo(titleEditText.getText().toString(), descriptionEditText.getText().toString());
   }
 
   /**
    *
    * @param title title of newTodo
-   * @param description description of newTodo
-   * @param depends _TODO that newTodo depends on, set empty if not a dependent
+   * @param description description of newTodo\
    */
-  private void saveTodo(String title, String description, String depends) {
+  private void saveTodo(String title, String description) {
     ParseObject newTodo = new ParseObject(Todo.OBJECT_KEY);
     newTodo.put(Todo.TITLE_KEY, title);
     newTodo.put(Todo.DESCRIPTION_KEY, description);
-    newTodo.put(Todo.DEPENDS_KEY, depends);
+    newTodo.put(Todo.DEPENDS_KEY, dependsList);
     newTodo.saveInBackground();
   }
+
+  private class ListItem  {
+    private String id;
+
+    public ListItem(String str) {
+      id = str;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    public void setId(String id) {
+      this.id = id;
+    }
+
+    @Override
+    public String toString() {
+      return id;
+    }
+  }
+
 
 }
 
