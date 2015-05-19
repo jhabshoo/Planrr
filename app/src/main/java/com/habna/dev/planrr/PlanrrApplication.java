@@ -3,6 +3,7 @@ package com.habna.dev.planrr;
 import android.app.Application;
 
 import com.parse.Parse;
+import com.parse.ParseObject;
 
 /**
  * Created by jhabshoosh on 5/17/15.
@@ -18,5 +19,6 @@ public class PlanrrApplication extends Application {
 
     Parse.enableLocalDatastore(this);
     Parse.initialize(this, APPLICATION_ID, CLIENT_KEY);
+    ParseObject.registerSubclass(Todo.class);
   }
 }

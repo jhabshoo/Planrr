@@ -24,19 +24,6 @@ import java.util.List;
 
 public class AddNewActivity extends ListActivity {
 
-  @Override
-  protected void onListItemClick(ListView l, View v, int position, long id) {
-    super.onListItemClick(l, v, position, id);
-
-    CheckedTextView item = (CheckedTextView) v;
-    item.setChecked(!item.isChecked());
-    if (item.isChecked()) {
-      dependsList.add(item.getText().toString());
-    } else  {
-      dependsList.remove(item.getText().toString());
-    }
-  }
-
   /**
    * enum to hold edittext validation state
    */
@@ -64,7 +51,6 @@ public class AddNewActivity extends ListActivity {
 
   // TODO - fix style
   private final String TITLE_EMPTY_ERROR_MSG = "Title cannot be empty!";
-  private final String DESC_EMPTY_ERROR_MSG = "Description cannot be empty.";
   private final String TITLE_TOO_LONG_ERROR_MSG = "Title cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
   private final String DESC_TOO_LONG_ERROR_MSG = "Description cannot exceed length of " + MAX_TITLE_LENGTH +  ".";
 
@@ -96,7 +82,6 @@ public class AddNewActivity extends ListActivity {
       }
     });
 
-    ListView listView = getListView();
     ParseQuery query = new ParseQuery(Todo.OBJECT_KEY);
     List results = null;
     try {
@@ -111,11 +96,24 @@ public class AddNewActivity extends ListActivity {
       todosList.add(listItem);
     }
 
-    ArrayAdapter adapter = new ArrayAdapter<ListItem>(this,
+    ArrayAdapter adapter = new ArrayAdapter<>(this,
         android.R.layout.simple_list_item_multiple_choice, todosList);
 
     getListView().setVisibility(todosListVisible);
     getListView().setAdapter(adapter);
+  }
+
+  @Override
+  protected void onListItemClick(ListView l, View v, int position, long id) {
+    super.onListItemClick(l, v, position, id);
+
+    CheckedTextView item = (CheckedTextView) v;
+    item.setChecked(!item.isChecked());
+    if (item.isChecked()) {
+      dependsList.add(item.getText().toString());
+    } else  {
+      dependsList.remove(item.getText().toString());
+    }
   }
 
   @Override
@@ -198,9 +196,7 @@ public class AddNewActivity extends ListActivity {
     }
 
     // desc
-    if (descState.equals(InputState.EMPTY)) {
-      ((EditText)findViewById(R.id.descriptionEditText)).setError(DESC_EMPTY_ERROR_MSG);
-    } else  {
+    if (descState.equals(InputState.TOO_LONG)) {
       ((EditText)findViewById(R.id.descriptionEditText)).setError(DESC_TOO_LONG_ERROR_MSG);
     }
   }
@@ -212,20 +208,23 @@ public class AddNewActivity extends ListActivity {
     EditText titleEditText = (EditText) findViewById(R.id.titleEditText);
     EditText descriptionEditText = (EditText) findViewById(R.id.descriptionEditText);
     saveTodo(titleEditText.getText().toString(), descriptionEditText.getText().toString());
+
   }
 
   /**
    *
    * @param title title of newTodo
-   * @param description description of newTodo\
+   * @param description description of newTodo
    */
   private void saveTodo(String title, String description) {
-    ParseObject newTodo = new ParseObject(Todo.OBJECT_KEY);
-    newTodo.put(Todo.TITLE_KEY, title);
-    newTodo.put(Todo.DESCRIPTION_KEY, description);
-    newTodo.put(Todo.DEPENDS_KEY, dependsList);
+    Todo newTodo = new Todo();
+    newTodo.setTitle(title, true);
+    newTodo.setDescription(description, true);
+    newTodo.loadDependIds(dependsList);
     newTodo.saveInBackground();
   }
+
+//  privaterivate ArrayList`
 
   private class ListItem  {
     private String id;
@@ -247,7 +246,6 @@ public class AddNewActivity extends ListActivity {
       return id;
     }
   }
-
 
 }
 
